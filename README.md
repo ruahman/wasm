@@ -1,0 +1,2 @@
+# wasm
+project for wasm
