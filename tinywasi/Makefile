@@ -1,24 +1,21 @@
-
 DIR := ${CURDIR}
 
+CONTAINER := tinygo-wasm
+
+IMAGE := tinygo:wasm
+
+EXE := tinywasi
+
 build:
-ifdef docker
-ifdef wasi
-	docker run --rm -it -v $(DIR):/home/tinygo tinygo/tinygo tinygo build -o tinywasi.wasm -target wasi .
+ifdef wasm
+	tinygo build -o $(EXE).wasm -target=wasi .
 else
-	docker run --rm -it -v $(DIR):/home/tinygo tinygo/tinygo tinygo build -o tinywasi.wasm .
-endif
-else
-ifdef wasi
-	tinygo build -target=wasi .
-else
-	tinygo build .
-endif
+	tinygo build -o $(EXE) .
 endif
 
 run:
-ifdef wasmtime
-	wasmtime .\tinywasi.wasm
+ifdef wasm
+	wasmtime ./$(EXE).wasm
 else
 	tinygo run .
 endif
@@ -26,8 +23,23 @@ endif
 test:
 	tinygo test -v $(package)
 
-shell:
-	docker run --rm -it -v ${pwd}:/home/tinygo tinygo/tinygo bash
+docker:
+ifdef run
+	docker run -it -v $(DIR):/code --name $(CONTAINER) $(IMAGE) bash
+endif
+ifdef start
+	docker start -ai $(CONTAINER)
+endif
+ifdef build
+	docker build -t $(IMAGE) .
+endif
+ifdef rm
+	docker container rm $(CONTAINER)
+endif
+ifdef rmi
+	docker image rm $(IMAGE)
+endif
 
 clean:
-	del tinywasi.* 
+	del *.exe 
+	del *.wasm
