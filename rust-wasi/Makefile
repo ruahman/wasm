@@ -1,36 +1,43 @@
 
 DIR := ${CURDIR}
 
+CONTAINER := rust-wasm
+
+IMAGE := rust:wasm
+
 build:
-ifdef docker
-ifdef wasi
-	docker run --rm -it -v $(DIR):/code -w /code rust:wasi cargo build --target wasm32-wasi
-else
-	docker run --rm -it -v $(DIR):/code -w /code rust:wasi cargo build
-endif
-else
-ifdef wasi
+ifdef wasm
 	cargo build --target wasm32-wasi
 else
 	cargo build
 endif
-endif
 
 run:
-ifdef wasmtime
-	wasmtime .\target\wasm32-wasi\debug\rust_wasi.wasm
+ifdef wasm
+	wasmtime target/wasm32-wasi/debug/rust_wasi.wasm
 else
 	cargo run
 endif
 
-shell:
-	docker run --rm -it -v $(DIR):/code -w /code rust bash
+docker:
+ifdef run
+	docker run -it -v $(DIR):/code --name $(CONTAINER) $(IMAGE) bash
+endif
+ifdef start
+	docker start -ai $(CONTAINER)
+endif
+ifdef build
+	docker build -t $(IMAGE) .
+endif
+ifdef rm
+	docker container rm $(CONTAINER)
+endif
+ifdef rmi
+	docker image rm $(IMAGE)
+endif
 
 test:
 	cargo test $(path) -- --nocapture
 
 check:
 	cargo check
-
-docker:
-	 docker build -t rust:wasi .
