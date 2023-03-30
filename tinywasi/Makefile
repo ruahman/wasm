@@ -9,37 +9,43 @@ EXE := tinywasi
 build:
 ifdef wasm
 	tinygo build -o $(EXE).wasm -target=wasi .
-else
+else ifdef tinygo
 	tinygo build -o $(EXE) .
+else
+	go build -o $(EXE)
 endif
 
 run:
 ifdef wasm
 	wasmtime ./$(EXE).wasm
-else
+else ifdef tinygo
 	tinygo run .
+else
+	go run .
 endif
+
+check:
+	go build -o /dev/null
 
 test:
 	tinygo test -v $(package)
 
+clean:
+	- rm -f $(EXE)
+	- rm -f *.exe 
+	- rm -f *.wasm
+
 docker:
 ifdef run
 	docker run -it -v $(DIR):/code --name $(CONTAINER) $(IMAGE) bash
-endif
-ifdef start
+else ifdef start
 	docker start -ai $(CONTAINER)
-endif
-ifdef build
+else ifdef build
 	docker build -t $(IMAGE) .
-endif
-ifdef rm
+else ifdef rm
 	docker container rm $(CONTAINER)
-endif
-ifdef rmi
+else ifdef rmi
 	docker image rm $(IMAGE)
+else
+	@echo please specify run, start, build, rm, or rmi
 endif
-
-clean:
-	del *.exe 
-	del *.wasm

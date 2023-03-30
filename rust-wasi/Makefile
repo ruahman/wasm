@@ -1,11 +1,10 @@
-
 DIR := ${CURDIR}
 
 CONTAINER := rust-wasm
 
 IMAGE := rust:wasm
 
-EXE := target/wasm32-wasi/debug/rust_wasi.wasm
+EXE := rust_wasi
 
 build:
 ifdef wasm
@@ -22,24 +21,25 @@ test:
 
 run:
 ifdef wasm
-	wasmtime $(EXE)
+	wasmtime target/wasm32-wasi/debug/$(EXE).wasm
 else
 	cargo run
 endif
 
+clean:
+	cargo clean
+
 docker:
 ifdef run
 	docker run -it -v $(DIR):/code --name $(CONTAINER) $(IMAGE) bash
-endif
-ifdef start
+else ifdef start
 	docker start -ai $(CONTAINER)
-endif
-ifdef build
+else ifdef build
 	docker build -t $(IMAGE) .
-endif
-ifdef rm
+else ifdef rm
 	docker container rm $(CONTAINER)
-endif
-ifdef rmi
+else ifdef rmi
 	docker image rm $(IMAGE)
+else
+	@echo please specify either run, start, build, rm, or rmi
 endif
